@@ -3,44 +3,54 @@ package main
 import (
 	"context"
 	"errors"
-	//"fmt"
-	"log"
+	"fmt"
+	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
-
-	"log/slog"
-	"net/http"
 )
 
 func main() {
+	if err := run(); err != nil {
+		slog.Error("arrêt avec erreur", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	port := "8080"
 	mux := http.NewServeMux()
-	server := &http.Server{
-		Addr:    ":" + port,
+	srv := &http.Server{
+		Addr: ":" + port,
 		Handler: mux,
 	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	// Ajouter un channel pour éviter que le serveur ne se ferme avec main
+
 	serverErr := make(chan error, 1)
 	go func() {
-		slog.Info("Server started", "port", port)
-		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			serverErr <- err
+		slog.Info("Serveur démarré", "port", port)
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			serverErr <-err
 		}
 	}()
 
+	var runErr error
 	select {
-	case err := <-serverErr:
-		log.Println("Serveur: %w", err)
+	case runErr = <-serverErr:
+		slog.Error("erreur serveur", "error", runErr)
 	case <-ctx.Done():
-		slog.Info("Signal d'arrêt reçu, arrêt gracieux...")
+		slog.Info("signal d'arrêt reçu, arrêt gracieux...")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+
+	shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		log.Println("Arrêt gracieux: %w", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("arrêt gracieux: %w", err)
 	}
+	
 	slog.Info("arrêt propre terminé")
+	return runErr
 }
