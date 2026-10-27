@@ -45,7 +45,7 @@ func run() error {
 		slog.Info("signal d'arrêt reçu, arrêt gracieux...")
 	}
 
-	shutdownSrv(srv, 30*time.Second)
+	runErr = shutdownSrv(srv, 30*time.Second)
 
 	slog.Info("arrêt propre terminé")
 	return runErr
