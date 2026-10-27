@@ -45,14 +45,14 @@ func run() error {
 		slog.Info("signal d'arrêt reçu, arrêt gracieux...")
 	}
 
-	shutdownSrv(ctx, srv, 30*time.Second)
+	shutdownSrv(srv, 30*time.Second)
 
 	slog.Info("arrêt propre terminé")
 	return runErr
 }
 
-func shutdownSrv(ctx context.Context, srv *http.Server, timeShutdown time.Duration) error {
-	shutdownCtx, cancel := context.WithTimeout(ctx, timeShutdown)
+func shutdownSrv(srv *http.Server, timeShutdown time.Duration) error {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), timeShutdown)
 	defer cancel()
 	err := srv.Shutdown(shutdownCtx)
 	if err != nil {
