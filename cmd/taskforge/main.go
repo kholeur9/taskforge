@@ -40,7 +40,7 @@ func run() error {
 	var runErr error
 	select {
 	case runErr = <-serverErr:
-		slog.Error("erreur serveur", "error", runErr)
+		return runErr
 	case <-ctx.Done():
 		slog.Info("signal d'arrêt reçu, arrêt gracieux...")
 	}
@@ -56,5 +56,12 @@ func run() error {
 func shutdownSrv(srv *http.Server, timeShutdown time.Duration) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), timeShutdown)
 	defer cancel()
-	return srv.Shutdown(shutdownCtx)
+	var shutdownErr error
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		if errClose := srv.Close(); errClose != nil {
+			shutdownErr = errClose
+		}
+		shutdownErr = err
+	}
+	return fmt.Errorf("arrêt gracieux: %w", shutdownErr)
 }
