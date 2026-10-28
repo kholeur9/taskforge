@@ -46,7 +46,7 @@ func run() error {
 	}
 
 	if err := shutdownSrv(srv, 30*time.Second); err != nil {
-		return fmt.Errorf("arrêt gracieux: %w", err)
+		return err
 	}
 
 	slog.Info("arrêt propre terminé")
