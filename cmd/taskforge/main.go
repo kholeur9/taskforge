@@ -65,13 +65,7 @@ func run() error {
 			closeErr = fmt.Errorf("Arrêt immédiat du serveur: %w", errClose)
 		}
 		shutdownErr = fmt.Errorf("Arrêt gracieux: %w", err)
-		errWrap := errors.Join(shutdownErr, closeErr)
-		if errors.Is(errWrap, shutdownErr) {
-			return shutdownErr
-		}
-		if errors.Is(errWrap, closeErr) {
-			return closeErr
-		}
+		return errors.Join(shutdownErr, closeErr)
 	}
 	slog.Info("Arrêt propre terminé")
 	return nil
