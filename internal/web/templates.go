@@ -2,14 +2,14 @@ package web
 
 import (
 	"net/http"
-	"text/template"
+	"html/template"
 )
 
 type TemplateManager struct {
 	templates *template.Template
 }
 
-func NewTemplateManger() (*TemplateManager, error) {
+func NewTemplateManager() (*TemplateManager, error) {
 	tmpl, err := template.ParseFiles("templates/dashboard.html")
 	if err != nil {
 		return nil, err
