@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"taskforge/internal/web"
 	"time"
 )
 
@@ -38,6 +39,11 @@ func run() error {
 	mux := http.NewServeMux()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+	//
+	_, err := web.NewTemplateManager()
+	if err != nil {
+		return fmt.Errorf("Chargement des templates: %w", err)
+	}
 	server := &http.Server{
 		Addr:    ":" + config.Port,
 		Handler: mux,
