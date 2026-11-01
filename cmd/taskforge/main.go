@@ -60,10 +60,18 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
+		var shutdownErr, closeErr error 
 		if errClose := server.Close(); errClose != nil {
-			return fmt.Errorf("Arrêt immédiat du serveur: %w", errClose)
+			closeErr = fmt.Errorf("Arrêt immédiat du serveur: %w", errClose)
 		}
-		return fmt.Errorf("Arrêt gracieux: %w", err)
+		shutdownErr = fmt.Errorf("Arrêt gracieux: %w", err)
+		errWrap := errors.Join(shutdownErr, closeErr)
+		if errors.Is(errWrap, shutdownErr) {
+			return shutdownErr
+		}
+		if errors.Is(errWrap, closeErr) {
+			return closeErr
+		}
 	}
 	slog.Info("Arrêt propre terminé")
 	return nil
