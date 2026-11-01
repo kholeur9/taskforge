@@ -10,7 +10,7 @@ type TemplateManager struct {
 }
 
 func NewTemplateManager() (*TemplateManager, error) {
-	tmpl, err := template.ParseFiles("templates/dashboard.html")
+	tmpl, err := template.ParseFiles("templates/layouts/base.html", "templates/pages/dashboard.html")
 	if err != nil {
 		return nil, err
 	}
