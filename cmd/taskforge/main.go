@@ -11,57 +11,57 @@ import (
 	"time"
 )
 
+type Config struct {
+	Port string
+	ShutdownTimeout time.Duration
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
 func main() {
 	if err := run(); err != nil {
-		slog.Error("arrêt avec erreur", "error", err)
+		slog.Error("Arrêt de l'application", "error", err)
 		os.Exit(1)
 	}
 }
 
 func run() error {
-	port := "8080"
-	mux := http.NewServeMux()
-	srv := &http.Server{
-		Addr: ":" + port,
-		Handler: mux,
+	config := Config{
+		Port: getEnv("PORT", "8080"),
+		ShutdownTimeout: 15*time.Second,
 	}
-
+	mux := http.NewServeMux()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
+	server := &http.Server{
+		Addr: ":" + config.Port,
+		Handler: mux,
+	}
 	serverErr := make(chan error, 1)
 	go func() {
-		slog.Info("Serveur démarré", "port", port)
-		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		slog.Info("Serveur démarré", "port", config.Port)
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			// On fait remonter l'erreur dans le channel pout le transmettre à la goroutine principale.
 			serverErr <-err
 		}
 	}()
-
 	var runErr error
-	select {
+	select{
 	case runErr = <-serverErr:
-		return runErr
+		return fmt.Errorf("Serveur: %w", runErr)
 	case <-ctx.Done():
-		slog.Info("signal d'arrêt reçu, arrêt gracieux...")
+		slog.Info("Signal d'arrêt reçu, arrêt gracieux...")
 	}
-
-	if err := shutdownSrv(srv, 30*time.Second); err != nil {
-		return err
-	}
-
-	slog.Info("arrêt propre terminé")
-	return runErr
-}
-
-func shutdownSrv(srv *http.Server, timeShutdown time.Duration) error {
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), timeShutdown)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 	defer cancel()
-	var shutdownErr error
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		if errClose := srv.Close(); errClose != nil {
-			shutdownErr = errClose
-		}
-		shutdownErr = err
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("Arrêt gracieux: %w", err)
 	}
-	return fmt.Errorf("arrêt gracieux: %w", shutdownErr)
+	slog.Info("Arrêt propre terminé")
+	return nil
 }
