@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Port string
+	Port            string
 	ShutdownTimeout time.Duration
 }
 
@@ -32,14 +32,14 @@ func main() {
 
 func run() error {
 	config := Config{
-		Port: getEnv("PORT", "8080"),
-		ShutdownTimeout: 15*time.Second,
+		Port:            getEnv("PORT", "8080"),
+		ShutdownTimeout: 15 * time.Second,
 	}
 	mux := http.NewServeMux()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	server := &http.Server{
-		Addr: ":" + config.Port,
+		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
 	serverErr := make(chan error, 1)
@@ -47,11 +47,11 @@ func run() error {
 		slog.Info("Serveur démarré", "port", config.Port)
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			// On fait remonter l'erreur dans le channel pout le transmettre à la goroutine principale.
-			serverErr <-err
+			serverErr <- err
 		}
 	}()
 	var runErr error
-	select{
+	select {
 	case runErr = <-serverErr:
 		return fmt.Errorf("Serveur: %w", runErr)
 	case <-ctx.Done():
@@ -60,7 +60,7 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		var shutdownErr, closeErr error 
+		var shutdownErr, closeErr error
 		if errClose := server.Close(); errClose != nil {
 			closeErr = fmt.Errorf("Arrêt immédiat du serveur: %w", errClose)
 		}
