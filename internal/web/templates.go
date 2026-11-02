@@ -14,15 +14,19 @@ func NewTemplateManager() (*TemplateManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmplClone, err := tmplBase.Clone()
+	tmplCloneDash, err := tmplBase.Clone()
 	if err != nil {
 		return nil, err
 	}
-	tmplDash, err := tmplClone.ParseFiles("templates/pages/dashboard.html")
+	tmplDash, err := tmplCloneDash.ParseFiles("templates/pages/dashboard.html")
 	if err != nil {
 		return nil, err
 	}
-	tmplEvent, err := tmplClone.ParseFiles("templates/pages/events.html")
+	tmplCloneEvents, err := tmplBase.Clone()
+	if err != nil {
+		return nil, err
+	}
+	tmplEvent, err := tmplCloneEvents.ParseFiles("templates/pages/events.html")
 	if err != nil {
 		return nil, err
 	}
