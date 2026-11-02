@@ -1,4 +1,8 @@
 {{define "content"}}
     <h1>Bienvenue sur TaskForge</h1>
     <p>Notre première page générée avec Go.</p>
+
+    <p>Evènements reçu: {{.EventsReceived}}</p>
+    <p>Tâches traitées: {{.TasksExecuted}}</p>
+    <p>Tâches échouées: {{.TasksFailed}}</p>
 {{end}}

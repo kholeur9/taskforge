@@ -40,10 +40,14 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	//
-	_, err := web.NewTemplateManager()
+	templateManager, err := web.NewTemplateManager()
 	if err != nil {
 		return fmt.Errorf("Chargement des templates: %w", err)
 	}
+	handler := web.NewHandler(templateManager)
+	mux.HandleFunc("/", handler.Dashboard)
+	mux.HandleFunc("/events", handler.Events)
+	//
 	server := &http.Server{
 		Addr:    ":" + config.Port,
 		Handler: mux,
