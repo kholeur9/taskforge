@@ -45,8 +45,9 @@ func run() error {
 		return fmt.Errorf("Chargement des templates: %w", err)
 	}
 	handler := web.NewHandler(templateManager)
-	mux.HandleFunc("/", handler.Dashboard)
-	mux.HandleFunc("/events", handler.Events)
+	mux.HandleFunc("GET /", handler.Dashboard)
+	mux.HandleFunc("GET /events", handler.Events)
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	//
 	server := &http.Server{
 		Addr:    ":" + config.Port,

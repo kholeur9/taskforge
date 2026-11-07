@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"log/slog"
 	"net/http"
 )
@@ -16,24 +17,23 @@ func NewHandler(templates *TemplateManager) *Handler {
 }
 
 func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	data := DashboardData{
-		EventsReceived: 10,
-		TasksExecuted: 7,
-		TasksFailed: 3,
-	}
-	err := h.templates.Render(w, "dashboard", data)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := h.templates.Render(&buf, "dashboard", nil); err != nil {
 		slog.Error("Erreur lors du rendu du template dashboard", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }
 
 func (h *Handler) Events(w http.ResponseWriter, r *http.Request) {
-	err := h.templates.Render(w, "events", nil)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := h.templates.Render(&buf, "events", nil); err != nil {
 		slog.Error("Erreur lors du rendu du template événements", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }

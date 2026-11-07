@@ -1,8 +1,10 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
-	"net/http"
+	"io"
+	//"net/http"
 )
 
 type TemplateManager struct {
@@ -38,7 +40,10 @@ func NewTemplateManager() (*TemplateManager, error) {
 	}, nil
 }
 
-func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data any) error {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	return tm.templates[name].ExecuteTemplate(w, "base.html", data)
+func (tm *TemplateManager) Render(w io.Writer, name string, data any) error {
+	t, ok := tm.templates[name]
+	if !ok {
+		return fmt.Errorf("template inconnu %q", name)
+	}
+	return t.ExecuteTemplate(w, "base.html", data)
 }
