@@ -1,5 +1,15 @@
 {{define "navbar"}}
-<nav class="h-16 px-6 flex items-center">
-    <div class="bg-gray-500 h-full">Profiles</div>
+<nav class="h-16 px-6 flex items-center justify-between">
+    <div></div>
+    <div></div>
+    <div class="relative w-48 h-10 py-2.5 flex items-center bg-gray-800 overflow-visible rounded-sm">
+        <div class="w-full py-1.5 px-2.5 flex flex-col justify-center">
+            <span class="text-white text-xs">Yann Kholeur</span>
+            <span class="text-gray-300 text-xs">Admin</span>
+        </div>
+        <div class="absolute -right-2 w-12.5 h-12.5 flex items-center rounded-full overflow-hidden">
+            <img src="https://github.com/shadcn.png" alt="@shadcn">
+        </div>
+    </div>
 </nav>
 {{end}}
